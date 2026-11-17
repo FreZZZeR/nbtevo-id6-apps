@@ -27,8 +27,8 @@ Planned apps, mapped from `nbtevo-diag`:
 | App | From | Reads |
 |---|---|---|
 | **Codes** | `dtc.py` | module fault memory (`19 02 FF`) — parser + collector built & host-tested (`native/src/codes.c`); real HSFZ transport is Stage C/D |
-| **Gauges / Sport** | `signals.py` + probe | boost, power, torque, temps, pressures, shift-light |
-| **xDrive** | `control.py` | temporary RWD with a software interlock |
+| **Gauges / Sport** | `signals.py` + probe | boost, power, torque, temps, pressures, shift-light — collector built & host-tested (`native/src/gauges.c`: decode + plausibility over the seam); real signals Stage C |
+| **xDrive** | `control.py` | temporary RWD with a software interlock — fuse + set-mode ported & host-tested (`native/src/xdrive.c`); DSC variant/write validated on-car (Stage C) |
 
 ## Build & test (host — no car, no QNX)
 

@@ -21,6 +21,12 @@ test: gen
 	$(CC) $(CFLAGS) -Inative/src \
 		native/tests/test_codes.c native/src/codes.c -o native/test_codes
 	./native/test_codes
+	$(CC) $(CFLAGS) -I"$(GEN)" -Inative/src \
+		native/tests/test_gauges.c native/src/gauges.c native/src/uds.c native/src/decode.c -o native/test_gauges -lm
+	./native/test_gauges
+	$(CC) $(CFLAGS) -Inative/src \
+		native/tests/test_xdrive.c native/src/xdrive.c native/src/uds.c -o native/test_xdrive
+	./native/test_xdrive
 
 # iDemu stage (Stage B, manual). iDemu boots the real id6 HMI but can NOT load our .so plugin
 # and has no diagnostic transport (no HSFZ/DME) — it validates the HMI environment + MOST
@@ -38,4 +44,5 @@ idemu:
 	fi
 
 clean:
-	rm -f native/test_decode native/test_codes $(GEN)/dids.h $(GEN)/test_vectors.h
+	rm -f native/test_decode native/test_codes native/test_gauges native/test_xdrive \
+		$(GEN)/dids.h $(GEN)/test_vectors.h

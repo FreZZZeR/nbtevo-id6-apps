@@ -8,6 +8,8 @@
 #ifndef ND_CODES_H
 #define ND_CODES_H
 
+#include "uds.h"   /* nd_uds_fn — the transport seam (shared with gauges/xdrive) */
+
 typedef struct {
     unsigned long code;     /* 3-byte DTC, e.g. 0x101A05 */
     unsigned char status;   /* 1-byte ISO-14229 status mask */
@@ -31,13 +33,6 @@ typedef struct {
  * -1 if resp is not a valid `59 02 ..` reply. A trailing partial record is ignored —
  * byte-for-byte the same shape dtc.read_dtcs() parses. */
 int nd_parse_dtcs(const unsigned char *resp, int len, nd_dtc *out, int max);
-
-/* Transport seam: send a UDS request to one ECU and receive its response.
- * Returns the response length (>0), or <=0 on a transport error. A fake implements this
- * in tests; the head-unit build implements it over the real HSFZ/UDS socket. */
-typedef int (*nd_uds_fn)(void *ctx, unsigned char ecu,
-                         const unsigned char *req, int reqlen,
-                         unsigned char *resp, int maxresp);
 
 /* Read fault memory from one ECU: sends `19 02 FF` via `send`, parses into out[].
  * Returns the DTC count (>=0), or -1 on transport error or a negative/!=59 02 reply. */
