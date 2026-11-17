@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- HMI plugin descriptor the NBT EVO loader reads from the aftermarket plugin dir.
+     <file> is the plugin shared object (deployed as {pluginDir}/nbtevo-diag, no .so suffix,
+     like ID6_apps); the collector is a separate process the plugin spawns. Connector id 120
+     is clear of ID6_apps (100,102,103,104,111,112) and NBT-AAD (100/103/104). -->
+<plugin>
+  <name>nbtevo-diag</name>
+  <type>App</type>
+  <file>{pluginDir}/nbtevo-diag</file>
+  <config>
+    <autoStart>yes</autoStart>
+    <dependencies>
+      <pluginAppConnector>
+        <type>Etch</type>
+        <id>120</id>
+        <asyncCallbacks>yes</asyncCallbacks>
+      </pluginAppConnector>
+    </dependencies>
+    <parameters>
+      <DescFile>{pluginDir}/nbtevo-diag.xml</DescFile>
+    </parameters>
+  </config>
+</plugin>

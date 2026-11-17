@@ -32,13 +32,13 @@ typedef char abi_string_size[(sizeof(bmw::BasicString<char>) == 4) ? 1 : -1];
 
 namespace {
 const unsigned kFrameUdpPort = 42861;   // must match collector_main.c ND_PLUGIN_UDP_PORT
-// TODO(Stage C/D): the real model / action / state IDs come from the generated DescFile
-// manifest; keep connector IDs clear of the NBT-AAD plugin (100/103/104).
-const unsigned MODEL_GAUGE0      = 0x0100;  // first gauge label model; slot N is MODEL_GAUGE0 + N
-const unsigned MODEL_CODES       = 0x0200;  // codes summary label
-const unsigned MODEL_XDRIVE      = 0x0300;  // xDrive status label
-const unsigned ACTION_XDRIVE_RWD = 0x0010;
-const unsigned ACTION_XDRIVE_AWD = 0x0011;
+// Model / action IDs — MUST match native/plugin/nbtevo-diag.xml (the DescFile). The manifest's
+// connector id 120 is clear of ID6_apps and the NBT-AAD plugin (100/103/104).
+const unsigned MODEL_GAUGE0      = 50;   // gauge slot N -> model 50+N (coolant..trans = 50..57)
+const unsigned MODEL_CODES       = 60;   // fault-codes summary label
+const unsigned MODEL_XDRIVE      = 70;   // xDrive status label
+const unsigned ACTION_XDRIVE_RWD = 21;   // raAction: "Rear-wheel drive" button
+const unsigned ACTION_XDRIVE_AWD = 22;   // raAction: "All-wheel drive" button
 }
 
 class NbtevoDiagApp : public bmw::PluginApp {

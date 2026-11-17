@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- DescFile: the HMI state/widget tree for the nbtevo-diag plugin. Model + action IDs MUST
+     match plugin.cpp (MODEL_GAUGE0=50 + slot, MODEL_CODES=60, MODEL_XDRIVE=70, ACTION_XDRIVE_RWD=21,
+     ACTION_XDRIVE_AWD=22). One "Vehicle Information" entry -> one page: 8 gauge labels (2 cols),
+     a fault-codes summary, an xDrive status line, and the two xDrive action buttons. Text-only
+     (no ImageDBFile). Property ids: 20=x 21=y 9=width 10=height 23=SELECTABLE. -->
+<pluginApps>
+  <pluginApp applicationType="VehicleInformation" applicationWeight="210" text="nbtevo-diag">
+    <entryButton id="1" action="10">
+      <properties>
+        <property id="23" value="2" />
+      </properties>
+    </entryButton>
+    <actions>
+      <hmiAction id="10" target="100" />
+      <raAction id="21" />
+      <raAction id="22" />
+    </actions>
+    <models>
+      <raDataModel id="50" modelType="Richtext" />
+      <raDataModel id="51" modelType="Richtext" />
+      <raDataModel id="52" modelType="Richtext" />
+      <raDataModel id="53" modelType="Richtext" />
+      <raDataModel id="54" modelType="Richtext" />
+      <raDataModel id="55" modelType="Richtext" />
+      <raDataModel id="56" modelType="Richtext" />
+      <raDataModel id="57" modelType="Richtext" />
+      <raDataModel id="60" modelType="Richtext" />
+      <raDataModel id="70" modelType="Richtext" />
+    </models>
+    <hmiStates>
+      <hmiState id="100" text="nbtevo-diag">
+        <components>
+          <!-- gauges, left column: coolant / oil / iat / boost -->
+          <label id="200" model="50"><properties><property id="20" value="58"  /><property id="21" value="20"  /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="201" model="51"><properties><property id="20" value="58"  /><property id="21" value="80"  /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="202" model="52"><properties><property id="20" value="58"  /><property id="21" value="140" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="203" model="53"><properties><property id="20" value="58"  /><property id="21" value="200" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <!-- gauges, right column: rpm / torque / power / trans -->
+          <label id="204" model="54"><properties><property id="20" value="600" /><property id="21" value="20"  /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="205" model="55"><properties><property id="20" value="600" /><property id="21" value="80"  /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="206" model="56"><properties><property id="20" value="600" /><property id="21" value="140" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="207" model="57"><properties><property id="20" value="600" /><property id="21" value="200" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <!-- fault-codes summary + xDrive status -->
+          <label id="260" model="60"><properties><property id="20" value="58"  /><property id="21" value="265" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <label id="270" model="70"><properties><property id="20" value="600" /><property id="21" value="265" /><property id="9" value="500" /><property id="10" value="52" /></properties></label>
+          <!-- xDrive actions -->
+          <button id="280" action="21" text="Rear-wheel drive"><properties><property id="20" value="58"  /><property id="21" value="330" /><property id="9" value="500" /><property id="10" value="52" /></properties></button>
+          <button id="281" action="22" text="All-wheel drive"><properties><property id="20" value="600" /><property id="21" value="330" /><property id="9" value="500" /><property id="10" value="52" /></properties></button>
+        </components>
+      </hmiState>
+    </hmiStates>
+  </pluginApp>
+</pluginApps>
