@@ -134,4 +134,6 @@ static bmw::PluginApp* create_app(bmw::IDispatcher& d, const char* name,
     return new NbtevoDiagApp(d, bmw::BasicString<char>(name), 1u, 0u, v, cfg, res);
 }
 
-extern "C" NbtevoPluginInfo nbtevo_diag_plugin = { 1u, "nbtevo-diag", "nbtevo", &create_app };
+extern "C" {
+NbtevoPluginInfo nbtevo_diag_plugin = { 1u, "nbtevo-diag", "nbtevo", &create_app };
+}

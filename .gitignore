@@ -2,6 +2,7 @@
 native/generated/*.h
 
 # build outputs
+native/out/
 native/test_decode
 native/test_codes
 native/test_gauges
