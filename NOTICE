@@ -12,14 +12,15 @@ of truth and no drift between the Python reader and the C collector.
 Third-party material
 ------------------------------------------------------------------------------------------
 
-The following are NOT present yet; they will be incorporated in a later stage (the native
-HMI plugin / QNX cross-build). Their attribution is declared here in advance and will be
-kept in this NOTICE and in each incorporated file's header when added:
+This project incorporates the following third-party material:
 
-- Reverse-engineered HMI plugin ABI headers (bmw::* framework subset) and the host test
-  harness are derived from ID6_apps_prerelease
+- The HMI plugin ABI header native/sdk/bmw_list.h (the bmw::* framework subset) is vendored
+  verbatim from ID6_apps_prerelease
   (https://github.com/inotbarnacle/ID6_apps_prerelease), MIT License,
-  Copyright (c) 2026 ID6 Apps contributors.
+  Copyright (c) 2026 ID6 Apps contributors; the attribution is kept in that file's header.
+  The native plugin shell (native/src/plugin.cpp) and collector (native/src/collector_main.c)
+  are our own Apache-2.0 code written against that reconstructed ABI; the collector/plugin
+  loopback-UDP split follows ID6_apps's design (documented, not copied).
 
 The xDrive control/interlock logic in this project is an INDEPENDENT implementation and is
 NOT derived from ID6_apps's controls.c (which itself derives from idrive7-apps and carries

@@ -6,6 +6,9 @@ native/test_decode
 native/test_codes
 native/test_gauges
 native/test_xdrive
+native/test_frame
+native/test_hmi_view
+native/test_collect
 *.o
 *.so
 out/
