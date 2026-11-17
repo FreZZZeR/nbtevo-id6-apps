@@ -1,0 +1,30 @@
+nbtevo-id6-apps
+Copyright 2026 nbtevo-id6-apps contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This project is the on-car (native QNX) layer of a two-layer product. It reads its
+signal catalog from the companion project nbtevo-diag (Apache-2.0) and shares its decode
+definitions with it by code generation (codegen/gen_dids.py), so there is a single source
+of truth and no drift between the Python reader and the C collector.
+
+------------------------------------------------------------------------------------------
+Third-party material
+------------------------------------------------------------------------------------------
+
+The following are NOT present yet; they will be incorporated in a later stage (the native
+HMI plugin / QNX cross-build). Their attribution is declared here in advance and will be
+kept in this NOTICE and in each incorporated file's header when added:
+
+- Reverse-engineered HMI plugin ABI headers (bmw::* framework subset) and the host test
+  harness are derived from ID6_apps_prerelease
+  (https://github.com/inotbarnacle/ID6_apps_prerelease), MIT License,
+  Copyright (c) 2026 ID6 Apps contributors.
+
+The xDrive control/interlock logic in this project is an INDEPENDENT implementation and is
+NOT derived from ID6_apps's controls.c (which itself derives from idrive7-apps and carries
+that project's license). We deliberately keep it clean-room under Apache-2.0.
+
+We do not incorporate nbt-aa-tile (PolyForm Noncommercial) source, nor nbt-evo-trio-collector
+(no stated license) source; where their protocols are used, they are reimplemented from
+documented protocol facts.
