@@ -3,6 +3,7 @@ native/generated/*.h
 
 # build outputs
 native/test_decode
+native/test_codes
 *.o
 *.so
 out/

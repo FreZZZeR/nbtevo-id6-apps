@@ -26,7 +26,7 @@ Planned apps, mapped from `nbtevo-diag`:
 
 | App | From | Reads |
 |---|---|---|
-| **Codes** | `dtc.py` | module fault memory (`19 02 FF`) |
+| **Codes** | `dtc.py` | module fault memory (`19 02 FF`) — parser + collector built & host-tested (`native/src/codes.c`); real HSFZ transport is Stage C/D |
 | **Gauges / Sport** | `signals.py` + probe | boost, power, torque, temps, pressures, shift-light |
 | **xDrive** | `control.py` | temporary RWD with a software interlock |
 

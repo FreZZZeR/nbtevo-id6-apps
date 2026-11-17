@@ -13,11 +13,14 @@ IDEMU_DIR ?=
 gen:
 	python3 codegen/gen_dids.py --diag "$(NBTEVO_DIAG)" --out "$(GEN)"
 
-# Codegen, then compile the decode core + parity test and run it.
+# Codegen, then compile + run the decode parity test and the Codes worker test.
 test: gen
 	$(CC) $(CFLAGS) -I"$(GEN)" -Inative/src \
 		native/tests/test_decode.c native/src/decode.c -o native/test_decode -lm
 	./native/test_decode
+	$(CC) $(CFLAGS) -Inative/src \
+		native/tests/test_codes.c native/src/codes.c -o native/test_codes
+	./native/test_codes
 
 # iDemu stage (Stage B, manual). iDemu boots the real id6 HMI but can NOT load our .so plugin
 # and has no diagnostic transport (no HSFZ/DME) — it validates the HMI environment + MOST
@@ -35,4 +38,4 @@ idemu:
 	fi
 
 clean:
-	rm -f native/test_decode $(GEN)/dids.h $(GEN)/test_vectors.h
+	rm -f native/test_decode native/test_codes $(GEN)/dids.h $(GEN)/test_vectors.h
