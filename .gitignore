@@ -13,3 +13,6 @@ __pycache__/
 
 # per-car discovered maps (hold VIN-specific data)
 maps/*.json
+
+# local agent rules (names personal email; never publish)
+AGENTS.local.md

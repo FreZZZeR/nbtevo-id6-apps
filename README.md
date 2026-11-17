@@ -64,3 +64,8 @@ harness incorporated in a later stage derive from
 [ID6_apps_prerelease](https://github.com/inotbarnacle/ID6_apps_prerelease) (MIT); their notice
 is kept in `NOTICE` and in the file headers. Our xDrive interlock is independent (not ID6's
 idrive7-derived `controls.c`). See `NOTICE`.
+
+## Development guardrail
+
+Committed git hooks block publishing private data and run the tests before every push.
+Activate once per clone: `git config core.hooksPath hooks` (details in `hooks/README.md`).
