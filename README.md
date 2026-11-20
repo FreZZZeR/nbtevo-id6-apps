@@ -1,5 +1,17 @@
 # nbtevo-id6-apps
 
+> **Development is moving to ID6 Apps.**
+>
+> We are moving native NBT EVO app development to the established
+> [ID6_apps_prerelease suite](https://github.com/inotbarnacle/ID6_apps_prerelease),
+> using [our fork](https://github.com/FreZZZeR/ID6_apps_prerelease) to bring over the
+> N57 signal catalog, diesel support and safety improvements developed here.
+>
+> **The migration is in progress.** This repository is retained as a prototype and
+> reference; the sections below describe the earlier standalone implementation.
+> [nbtevo-diag](https://github.com/FreZZZeR/nbtevo-diag) and
+> [evocode](https://github.com/FreZZZeR/evocode) remain our diagnostic and validation tools.
+
 Native **BMW NBT EVO (iDrive6 / QNX)** apps that run **on the head unit** — fault codes,
 live engine/vehicle gauges (incl. the "sport" numbers: boost, torque, power) and xDrive
 control — with **no OBD adapter and no laptop**. The head unit already sits on the car's
