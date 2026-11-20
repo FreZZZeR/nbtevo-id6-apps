@@ -29,46 +29,77 @@ static int read_one(nd_uds_fn send, void *ctx, const char *key, double *v)
     return r.ok;
 }
 
+/* Which signals this engine answers. Mode-01 is a standard: where it answers we use it and
+ * never touch the DDE's own DIDs. Only where it is dead (the N57 through the FEM gateway) do
+ * we read the DDE's values, through the dynamic DID. Cached, because on the N57 the mode-01
+ * probe costs a transport timeout: paid once, not on every tick.
+ * ponytail: "mode-01 dead and rpm_dde plausible" is the whole engine check. Match the DDE's
+ * SGBD index (22 F150) before trusting the DDE set on another diesel. */
+enum { FAM_UNKNOWN, FAM_OBD, FAM_DDE };
+static int g_family = FAM_UNKNOWN;
+
+static int probe_family(nd_uds_fn send, void *ctx)
+{
+    double v;
+    if (read_one(send, ctx, "rpm", &v))
+        return FAM_OBD;
+    if (read_one(send, ctx, "rpm_dde", &v))
+        return FAM_DDE;
+    return FAM_UNKNOWN;
+}
+
 int nd_collect(nd_uds_fn send, void *ctx, nd_frame *out)
 {
-    double coolant, oil, iat, map, baro, rpm, reft, tpct, trans;
-    int okmap, okbaro, okrpm, okref, oktp, nok = 0, ndtc, i;
+    double coolant, oil, iat, map, baro, rpm, tq, trans;
+    int okmap, okbaro, okrpm, oktq, nok = 0, ndtc, i, dde;
     nd_dtc d[16];
     unsigned long var;
 
     out->valid = 1;
 
-    out->gauge_ok[NDG_COOLANT] = (uint8_t)read_one(send, ctx, "coolant", &coolant);
+    if (g_family == FAM_UNKNOWN)
+        g_family = probe_family(send, ctx);
+    dde = (g_family == FAM_DDE);
+
+    out->gauge_ok[NDG_COOLANT] = (uint8_t)read_one(send, ctx, dde ? "coolant_dde" : "coolant", &coolant);
     out->gauge[NDG_COOLANT] = coolant; nok += out->gauge_ok[NDG_COOLANT];
-    out->gauge_ok[NDG_OIL] = (uint8_t)read_one(send, ctx, "oil_temp", &oil);
+    out->gauge_ok[NDG_OIL] = (uint8_t)read_one(send, ctx, dde ? "oil_temp_dde" : "oil_temp", &oil);
     out->gauge[NDG_OIL] = oil; nok += out->gauge_ok[NDG_OIL];
-    out->gauge_ok[NDG_IAT] = (uint8_t)read_one(send, ctx, "iat", &iat);
+    out->gauge_ok[NDG_IAT] = (uint8_t)read_one(send, ctx, dde ? "iat_dde" : "iat", &iat);
     out->gauge[NDG_IAT] = iat; nok += out->gauge_ok[NDG_IAT];
 
-    /* boost = (MAP - baro)/100, needs both */
-    okmap  = read_one(send, ctx, "map",  &map);
-    okbaro = read_one(send, ctx, "baro", &baro);
+    /* boost = absolute - ambient, needs both. Mode-01 reports kPa, the DDE hPa. */
+    okmap  = read_one(send, ctx, dde ? "boost_abs_dde" : "map",  &map);
+    okbaro = read_one(send, ctx, dde ? "baro_dde"      : "baro", &baro);
+    if (dde) { map /= 10.0; baro /= 10.0; }
     out->gauge_ok[NDG_BOOST] = (uint8_t)(okmap && okbaro);
     out->gauge[NDG_BOOST] = (okmap && okbaro) ? nd_boost_bar(map, baro) : 0.0;
     nok += out->gauge_ok[NDG_BOOST];
 
-    okrpm = read_one(send, ctx, "rpm", &rpm);
+    okrpm = read_one(send, ctx, dde ? "rpm_dde" : "rpm", &rpm);
     out->gauge_ok[NDG_RPM] = (uint8_t)okrpm;
     out->gauge[NDG_RPM] = rpm; nok += okrpm;
 
-    /* torque = ref * actual% / 100; power = torque * rpm (needs rpm too) */
-    okref = read_one(send, ctx, "ref_torque", &reft);
-    oktp  = read_one(send, ctx, "torque_pct", &tpct);
-    if (okref && oktp) {
-        double tq = nd_torque_nm(reft, tpct);
-        out->gauge[NDG_TORQUE] = tq; out->gauge_ok[NDG_TORQUE] = 1; nok++;
-        out->gauge_ok[NDG_POWER] = (uint8_t)okrpm;
-        out->gauge[NDG_POWER] = okrpm ? nd_power_kw(tq, rpm) : 0.0;
-        nok += okrpm;
+    /* torque: the DDE reports Nm directly; mode-01 gives reference * actual% / 100.
+     * power = torque * rpm (needs rpm too). */
+    if (dde) {
+        oktq = read_one(send, ctx, "torque_dde", &tq);
     } else {
-        out->gauge[NDG_TORQUE] = 0.0; out->gauge_ok[NDG_TORQUE] = 0;
-        out->gauge[NDG_POWER]  = 0.0; out->gauge_ok[NDG_POWER]  = 0;
+        double reft, tpct;
+        int okref = read_one(send, ctx, "ref_torque", &reft);
+        int oktp  = read_one(send, ctx, "torque_pct", &tpct);
+        oktq = okref && oktp;
+        tq = oktq ? nd_torque_nm(reft, tpct) : 0.0;
     }
+    out->gauge_ok[NDG_TORQUE] = (uint8_t)oktq;
+    out->gauge[NDG_TORQUE] = oktq ? tq : 0.0;
+    out->gauge_ok[NDG_POWER] = (uint8_t)(oktq && okrpm);
+    out->gauge[NDG_POWER] = (oktq && okrpm) ? nd_power_kw(tq, rpm) : 0.0;
+    nok += oktq + (oktq && okrpm);
+
+    /* The family stopped answering (ignition off, or the probe was wrong): look again next tick. */
+    if (!okrpm)
+        g_family = FAM_UNKNOWN;
 
     out->gauge_ok[NDG_TRANS] = (uint8_t)read_one(send, ctx, "trans_temp", &trans);
     out->gauge[NDG_TRANS] = trans; nok += out->gauge_ok[NDG_TRANS];

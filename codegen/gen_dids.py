@@ -13,8 +13,9 @@ import argparse
 import os
 import sys
 
-# Exercises the signed-negative path at width 2 (0x8012), and 0x80 at width 1.
-SAMPLE = bytes([0x80, 0x12])
+# Exercises the signed-negative path at width 2 (0x8012), 0x80 at width 1, and the top bit of a
+# 4-byte value (0x80123456). Its length is the widest signal the C side takes (nd_vec.bytes[4]).
+SAMPLE = bytes([0x80, 0x12, 0x34, 0x56])
 
 
 def load_catalog(diag):
@@ -26,13 +27,32 @@ def load_catalog(diag):
     return signals
 
 
+def service_byte(signals, s):
+    """The wire service uds.c sends for a catalog signal.
+
+    An unknown kind stops the build. The old default (anything that isn't OBD -> 0x22) emitted
+    the N57's dynamic-DID signals as a direct read the DDE refuses with NRC 31 — every gauge
+    "n/a" on the car while the decode-parity test stayed green.
+    """
+    table = {signals.OBD: 0x01, signals.UDS: 0x22}
+    if hasattr(signals, "DYN"):
+        table[signals.DYN] = 0x2C  # uds.c: clear + define F303 from addr, then read F303
+    if s.service not in table:
+        sys.exit("gen_dids: %s uses service %r, which uds.c cannot send — teach both first"
+                 % (s.key, s.service))
+    return table[s.service]
+
+
 def rows_and_vectors(signals):
     rows, vecs = [], []
     for s in signals.ALL:
         d = s.decode
         if not isinstance(d, signals.Dec):
             continue  # computed / probe signals have no single-DID decode
-        service = 0x01 if s.service == signals.OBD else 0x22
+        if d.width > len(SAMPLE):
+            sys.exit("gen_dids: %s is %d bytes wide; the C side takes at most %d"
+                     % (s.key, d.width, len(SAMPLE)))
+        service = service_byte(signals, s)
         has_lo, lo = (1, float(s.lo)) if s.lo is not None else (0, 0.0)
         has_hi, hi = (1, float(s.hi)) if s.hi is not None else (0, 0.0)
         rows.append(

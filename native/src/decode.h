@@ -13,9 +13,10 @@
 typedef struct {
     const char   *key;
     unsigned char ecu;      /* diagnostic target byte: DME 0x12, EGS 0x18, FEM 0x10, ... */
-    unsigned char service;  /* 0x01 = OBD mode-01 PID, 0x22 = UDS ReadDataByIdentifier */
-    unsigned short addr;    /* PID (OBD) or DID (UDS) */
-    unsigned char width;    /* bytes to read: 1 or 2 */
+    unsigned char service;  /* 0x01 = OBD mode-01 PID, 0x22 = UDS ReadDataByIdentifier,
+                             * 0x2C = dynamic DID: define F303 from addr, then read it */
+    unsigned short addr;    /* PID (OBD), DID (UDS), or the source DID (dynamic) */
+    unsigned char width;    /* bytes to read: 1, 2 or 4 */
     unsigned char is_signed;
     long          num;      /* value = raw * num / den + offset */
     long          den;
@@ -24,7 +25,7 @@ typedef struct {
     unsigned char has_hi; double hi;
 } nd_sig;
 
-/* Big-endian integer in the first `width` bytes (two's-complement if is_signed). width<=2. */
+/* Big-endian integer in the first `width` bytes (two's-complement if is_signed). width<=4. */
 double nd_rawint(const unsigned char *d, int width, int is_signed);
 
 /* Decode one signal's bytes to a number. Returns 1 and sets *out if len >= width, else 0.

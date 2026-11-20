@@ -32,7 +32,7 @@ Planned apps, mapped from `nbtevo-diag`:
 | App | From | Reads |
 |---|---|---|
 | **Codes** | `dtc.py` | module fault memory (`19 02 FF`) — parser + collector built & host-tested (`native/src/codes.c`); real HSFZ transport is Stage C/D |
-| **Gauges / Sport** | `signals.py` + probe | boost, power, torque, temps, pressures, shift-light — collector built & host-tested (`native/src/gauges.c`: decode + plausibility over the seam); real signals Stage C |
+| **Gauges / Sport** | `signals.py` + probe | boost, power, torque, temps, pressures, shift-light — collector built & host-tested (`native/src/gauges.c`: decode + plausibility over the seam). Mode-01 where the engine answers it; on the N57, where it is dead, the DDE's own DIDs through a dynamic DID (`2C 03` clear, `2C 01` define F303, `22 F303`). Real signals Stage C |
 | **xDrive** | `control.py` | temporary RWD with a software interlock — fuse + set-mode ported & host-tested (`native/src/xdrive.c`); DSC variant/write validated on-car (Stage C) |
 | **HMI plugin** | ID6_apps ABI (MIT) | iDrive menu surfacing the three apps — shell (`native/src/plugin.cpp`) + collector process (`native/src/collector_main.c`), with the host-tested `frame`/`hmi_view`/`collector` backbone; cross-build is Stage D |
 

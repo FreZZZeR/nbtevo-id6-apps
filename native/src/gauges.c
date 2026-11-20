@@ -12,7 +12,10 @@ int nd_read_signal(nd_uds_fn send, void *ctx, const nd_sig *s, nd_reading *out)
     if (s == 0)
         return 0;
 
-    len = nd_uds_read(send, ctx, s->ecu, s->service, s->addr, data, (int)sizeof data);
+    if (s->service == 0x2C)                /* dynamic DID: a direct 22 would be refused */
+        len = nd_uds_read_dyn(send, ctx, s->ecu, s->addr, s->width, data, (int)sizeof data);
+    else
+        len = nd_uds_read(send, ctx, s->ecu, s->service, s->addr, data, (int)sizeof data);
     if (len < 0)
         return 0;                          /* transport error / NRC / echo mismatch */
     if (!nd_value(s, data, len, &out->value))

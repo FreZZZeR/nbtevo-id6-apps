@@ -11,10 +11,11 @@ double nd_rawint(const unsigned char *d, int width, int is_signed)
     for (i = 0; i < width; i++)
         u = (u << 8) | d[i];
     if (is_signed) {
-        /* ponytail: width<=2 in this catalog, so 1<<16 is safe in unsigned long. */
-        unsigned long bits = (unsigned long)width * 8u;
-        if (u & (1UL << (bits - 1u)))
-            return (double)u - (double)(1UL << bits);
+        /* 2^bits is formed as 2 * 2^(bits-1) in double: at width 4 a 1UL << 32 would overflow
+         * a 32-bit long, and the head unit is ARMv7. */
+        unsigned long top = 1UL << ((unsigned long)width * 8u - 1u);
+        if (u & top)
+            return (double)u - 2.0 * (double)top;
     }
     return (double)u;
 }

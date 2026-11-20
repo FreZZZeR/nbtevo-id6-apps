@@ -8,6 +8,7 @@
 
 #include "collector.h"
 #include "frame.h"
+#include "fake_dde.h"
 
 static int obd(unsigned char *resp, unsigned char pid, const unsigned char *data, int dn)
 { int i; resp[0] = 0x41; resp[1] = pid; for (i = 0; i < dn; i++) resp[2 + i] = data[i]; return 2 + dn; }
@@ -50,6 +51,18 @@ static int fake(void *ctx, unsigned char ecu, const unsigned char *req, int reql
     return 3;
 }
 
+/* Our N57: engine values only from the DDE model (mode-01 dead), the other modules as before. */
+static int n57_mode01;   /* how many mode-01 requests reached the engine */
+static int fake_n57(void *ctx, unsigned char ecu, const unsigned char *req, int reqlen,
+                    unsigned char *resp, int maxresp)
+{
+    if (ecu == 0x12 && reqlen > 0 && req[0] == 0x01)
+        n57_mode01++;
+    if (ecu == 0x12 && !(reqlen == 3 && req[0] == 0x19))
+        return fake_dde(ctx, ecu, req, reqlen, resp, maxresp);
+    return fake(ctx, ecu, req, reqlen, resp, maxresp);
+}
+
 static int fails;
 #define CHECK(c) do { if (!(c)) { printf("FAIL %s:%d  %s\n", __FILE__, __LINE__, #c); fails++; } } while (0)
 #define NEAR(a, b) (fabs((a) - (b)) < 1e-3)
@@ -82,7 +95,27 @@ int main(void)
         CHECK(g.xdrive_mode == 0xFF && g.xdrive_variant_ok == 0);
     }
 
+    /* the N57: mode-01 is dead, so the same eight slots come from the DDE's own DIDs through
+     * the dynamic DID. (The run above read nothing, so the engine family is probed afresh.) */
+    {
+        nd_frame n;
+        CHECK(nd_collect(fake_n57, 0, &n) == 8);
+        CHECK(n.gauge_ok[NDG_COOLANT] && NEAR(n.gauge[NDG_COOLANT], 50.0));
+        CHECK(n.gauge_ok[NDG_OIL]     && NEAR(n.gauge[NDG_OIL],     60.0));
+        CHECK(n.gauge_ok[NDG_IAT]     && NEAR(n.gauge[NDG_IAT],     19.96));
+        CHECK(n.gauge_ok[NDG_BOOST]   && NEAR(n.gauge[NDG_BOOST],   1.30));      /* (2300.02-1000.01) hPa */
+        CHECK(n.gauge_ok[NDG_RPM]     && NEAR(n.gauge[NDG_RPM],     3000.0));
+        CHECK(n.gauge_ok[NDG_TORQUE]  && NEAR(n.gauge[NDG_TORQUE],  299.9624));
+        CHECK(n.gauge_ok[NDG_POWER]   && NEAR(n.gauge[NDG_POWER],   94.2360));
+        CHECK(n.gauge_ok[NDG_TRANS]   && NEAR(n.gauge[NDG_TRANS],   52.0));
+        CHECK(n.dtc_count == 1);
+        /* the family is cached: the next tick asks mode-01 nothing (on the car that is a timeout) */
+        CHECK(n57_mode01 == 1);
+        CHECK(nd_collect(fake_n57, 0, &n) == 8 && NEAR(n.gauge[NDG_RPM], 3000.0));
+        CHECK(n57_mode01 == 1);
+    }
+
     if (fails) { printf("\n%d FAILURE(S)\n", fails); return 1; }
-    printf("collect OK: workers -> frame (gauges + computed, DTC, xDrive) vs fake gateway\n");
+    printf("collect OK: workers -> frame (gauges + computed, DTC, xDrive) vs fake gateway, mode-01 and N57 DDE\n");
     return 0;
 }

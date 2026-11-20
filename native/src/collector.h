@@ -2,7 +2,9 @@
  *
  * Drives the Codes/Gauges/xDrive workers over the transport seam and fills one frame. This
  * is the logic the collector PROCESS runs each tick (collector_main.c adds the HSFZ socket +
- * the loopback-UDP send). Pure except for the `send` calls, so a fake makes it host-testable.
+ * the loopback-UDP send). Pure except for the `send` calls and one cached fact — which signal
+ * family the engine answers (mode-01, or the N57 DDE's own DIDs) — so a fake makes it
+ * host-testable.
  */
 #ifndef ND_COLLECTOR_H
 #define ND_COLLECTOR_H

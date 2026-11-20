@@ -10,6 +10,7 @@
 #include "decode.h"
 #include "dids.h"
 #include "gauges.h"
+#include "fake_dde.h"
 
 static const nd_sig *find_sig(const char *key)
 {
@@ -72,11 +73,28 @@ int main(void)
     /* 5) null signal guard */
     CHECK(nd_read_signal(fake_gw, 0, NULL, &r) == 0);
 
-    /* 6) computed sport math (shared with signals.py) still available from decode core */
+    /* 6) dynamic DID: the N57 DDE refuses a direct 22, so these go clear -> define -> read.
+     *    The model APPENDS on define, so the 2nd and 3rd reads are right only if we cleared. */
+    {
+        const nd_sig *doil  = find_sig("oil_temp_dde");
+        const nd_sig *dcool = find_sig("coolant_dde");
+        const nd_sig *drail = find_sig("rail_dde");
+        CHECK(doil && dcool && drail);
+        CHECK(doil && doil->service == 0x2C);
+        CHECK(nd_read_signal(fake_dde, 0, doil, &r) == 1 && fabs(r.value - 60.0) < 1e-9);
+        CHECK(nd_read_signal(fake_dde, 0, dcool, &r) == 1 && fabs(r.value - 50.0) < 1e-9);  /* not oil again */
+        CHECK(nd_read_signal(fake_dde, 0, doil, &r) == 1 && fabs(r.value - 60.0) < 1e-9);
+        /* a source DID the ECU lacks: the define is refused -> ok=0, never a stale value */
+        CHECK(nd_read_signal(fake_dde, 0, drail, &r) == 0 && r.ok == 0);
+        /* and against a gateway that knows no 2C at all */
+        CHECK(nd_read_signal(fake_gw, 0, doil, &r) == 0 && r.ok == 0);
+    }
+
+    /* 7) computed sport math (shared with signals.py) still available from decode core */
     CHECK(fabs(nd_boost_bar(250, 100) - 1.5) < 1e-9);
     CHECK(fabs(nd_torque_nm(500, 80) - 400.0) < 1e-9);
 
     if (fails) { printf("\n%d FAILURE(S)\n", fails); return 1; }
-    printf("gauges OK: OBD + DID read/decode/plausibility over the transport seam\n");
+    printf("gauges OK: OBD + DID + dynamic-DID read/decode/plausibility over the transport seam\n");
     return 0;
 }
