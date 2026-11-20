@@ -59,12 +59,25 @@ syntax-checks the Stage-D plugin and collector shells against the ABI header.
 
 ## Testing tiers
 
+IDEmu capabilities checked on 2026-11-20 against upstream [`d03ecd84f363`](https://github.com/herrbimmer/IDEmu/tree/d03ecd84f363).
+
 1. **Local (here):** host compile + fakes + decode parity (`make test`). Covers all logic.
-2. **iDemu:** on its live validated stand (`007_051_002`) it runs the real id6 HMI and **can
-   host our HMI plugin** (render + rotary/touch), fed by loopback frames from a fake/stub
-   collector. Caveats: that stand is pinned to `007_051_002` (our head is `006_016_002`, so the
-   exact `.so` load is confirmed only on the car) and it has **no** diagnostic transport
-   (no HSFZ/DME) — real N57 signals + the DSC variant are on-car.
+2. **IDEmu:** runs the real QNX/id6 HMI and can package test plugins from `idemu/plugins/<Name>`;
+   feed our plugin loopback frames from a fake/stub collector for render/input checks. Upstream now
+   supports [macOS and Linux/WSL2](https://github.com/herrbimmer/IDEmu/blob/d03ecd84f363/docs/LINUX.md),
+   plus virtual CAN scenarios/record/replay, GPS, cluster and HUD. Its
+   [validated shim profiles](https://github.com/herrbimmer/IDEmu/blob/d03ecd84f363/docs/NBT_PROFILES.md)
+   are `007_051_002` (24-03, default) and `006_017_006` (18-03, `shim_profile: "1803"`, limited to
+   home screen/composition + rotor/buttons; touch and snapshot restore unvalidated). Each profile
+   needs the exact HMI and companion-library hashes. Our `006_016_002` has no full matching SWFL
+   set or validated profile; `006_017_006` does not establish our HMI/plugin ABI compatibility.
+   [Multi-firmware PR #16](https://github.com/herrbimmer/IDEmu/pull/16) remains open and unmerged; as checked
+   on 2026-11-20, head [`d73b049`](https://github.com/FreZZZeR/IDEmu/commit/d73b049d8f69e146b08018e8204a516a9bb7b501) includes main
+   `d03ecd8` and GitHub reports `mergeable=true`, `clean`. Its default shim cold-booted all four
+   exact `007` sets: `007_051_002`, `007_001_016`, `007_030_001`, `007_039_008`. This is HMI boot/render
+   validation, not validation of our plugin on `006_016_002` or of FSC acceptance.
+   There is still **no HSFZ endpoint (6801)**: virtual CAN is not a diagnostic gateway. Real N57
+   signals, the DSC variant and our plugin's exact on-car ABI remain Stage C checks.
 3. **On-car (parked):** the only place the exact N18032I ABI and real N57 DIDs are confirmed;
    SSH recovery pre-staged.
 

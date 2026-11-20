@@ -49,16 +49,20 @@ shells:
 	$(CXX) -std=c++98 -Wall -Wextra -Inative -Inative/src -fsyntax-only native/src/plugin.cpp
 	@echo "shells OK: collector_main.c + plugin.cpp syntax-check vs the ABI (link is Stage D)"
 
-# iDemu (herrbimmer/IDEmu) — Stage B, manual. On its live validated stand (007_051_002) it runs
-# the real id6 HMI and CAN host our HMI plugin (render + rotary/touch), fed by loopback frames
-# from a fake/stub collector. Two caveats keep it a middle tier, not the final gate: its HMI is
-# pinned to 007_051_002 (our head is 006_016_002, so the exact .so load is confirmed only on the
-# car), and it exposes no diagnostic transport (HSFZ 6801) — real N57 signals + the DSC variant
-# are on-car (Stage C). Set IDEMU_DIR to run the presence smoke check.
+# IDEmu (herrbimmer/IDEmu) — Stage B, manual; upstream d03ecd84f363 checked 2026-11-20.
+# Real QNX/id6 HMI on macOS or Linux/WSL2; use fake collector loopback frames for plugin UI.
+# Main profiles: default 007_051_002 and limited 1803 (006_017_006, rotor/buttons).
+# PR #16 d73b049 includes main d03ecd8; open/unmerged, mergeable/clean on 2026-11-20.
+# Its registry adds 007_001_016, 007_030_001 and 007_039_008; all four 007 HMI boots checked.
+# Exact HMI + companion hashes required; no full SWFL/profile for our 006_016_002.
+# Neighbouring 006_017_006 does not validate our HMI/plugin ABI.
+# Virtual CAN/replay/GPS/cluster/HUD do not supply HSFZ 6801. Real N57 signals, DSC and
+# exact on-car plugin ABI remain Stage C. Set IDEMU_DIR for the CLI presence check only.
 idemu:
-	@echo "iDemu: live id6 HMI stand (007_051_002) — can host the HMI plugin with loopback frames."
-	@echo "Caveats: HMI pinned to 007_051_002 (car is 006_016_002); no HSFZ/DME (fake data only)."
-	@echo "Exact-ABI .so load on 006 + real signals are on the parked car (Stage C)."
+	@echo "IDEmu: QNX/id6 HMI on macOS/Linux/WSL2; plugin UI checks use fake loopback frames."
+	@echo "Main: default 007_051_002; limited 1803=006_017_006. Our 006_016_002 has no validated profile/ABI."
+	@echo "PR #16 d73b049: open/unmerged, mergeable/clean (2026-11-20); adds 007_001_016/030_001/039_008."
+	@echo "Virtual CAN/replay/GPS/cluster/HUD; no HSFZ 6801. Real N57/DSC + on-car ABI: Stage C."
 	@if [ -n "$(IDEMU_DIR)" ] && [ -d "$(IDEMU_DIR)" ]; then \
 		echo "--- smoke check: python3 -m idemu list ---"; \
 		( cd "$(IDEMU_DIR)" && python3 -m idemu list ) || echo "(iDemu present but not runnable here)"; \
